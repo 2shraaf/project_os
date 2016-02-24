@@ -1,7 +1,7 @@
 
 
 void printString(char*);
-
+void readString(char*);
 
 void main()
 {
@@ -33,8 +33,10 @@ void main()
 	// putInMemory(0xB000, 0x8018, '!');
 	// putInMemory(0xB000, 0x8019, 0x7);
 	// while(1);
+	char line[80];
 	printString("Hello, world!\0");
-	// interrupt(0x10, 0xE*256 + 'Q', 0, 0, 0);
+	readString(line);
+	printString(line);
 }
 
 
@@ -45,8 +47,18 @@ void printString(char* in){
 	}
 }
 
-void readString(char* in){
-	do{
-		interrupt(0x16, )
+void readString(char* buffer){
+	char in = interrupt(0x16, 0, 0, 0, 0);
+	while(in != 0xd){
+		if(in != 0x8){
+		*buffer = in;
+		buffer++;
+	}else{
+		buffer--;
 	}
+		interrupt(0x10, 0xE*256 + (in), 0, 0, 0);
+		in = interrupt(0x16, 0, 0, 0, 0);
+	} 
+	in++; *in = 0xa;
+	in++; *in = 0x0;
 }
