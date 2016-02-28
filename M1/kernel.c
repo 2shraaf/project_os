@@ -1,7 +1,7 @@
 
 void main()
 {
-	
+
 	putInMemory(0xB000, 0x8000, 'H');
 	putInMemory(0xB000, 0x8001, 0x7); // white
 	putInMemory(0xB000, 0x8002, 'e');
