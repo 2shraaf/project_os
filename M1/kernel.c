@@ -61,7 +61,7 @@ void readString(char* buffer){
 	}else{
 		buffer = i>0 ? buffer-- : buffer;
 		i = i>0 ? i-- : i;
-		buffer = '\0';
+		*buffer = '\0';
 	}
 		interrupt(0x10, 0xE*256 + (in), 0, 0, 0);
 		in = interrupt(0x16, 0, 0, 0, 0);
