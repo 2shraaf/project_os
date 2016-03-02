@@ -30,3 +30,22 @@ void main()
 	putInMemory(0xB000, 0x8019, 0x7);
 	while(1);
 }
+int DIV(int a, int b){
+	int x=0;
+	if(!b) return 0; //it will make error
+	for(;a>=b;x++){ a-=b;}
+	return x;
+}
+int MOD(int a , int b){
+	if(!b) return 0; //it will make error
+	for(;a>=b;){ a-=b;}
+	return a;
+}
+
+void readSector(char* buffer, int sector){
+	int cl = MOD(sector,18)+1;
+	int dh =  MOD(DIV(sector,18),2);
+	int ch = DIV(sector,36);
+	interrupt(0x10, buffer, 0, 0, 0);
+
+}
