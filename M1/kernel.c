@@ -37,6 +37,15 @@ void main()
 	// putInMemory(0xB000, 0x8018, '!');
 	// putInMemory(0xB000, 0x8019, 0x7);
 	// while(1);
+	//--------------------
+	//test of task 1& 2
+	// 	char line[80];
+  // printString("Hello, world!!!!\n\0");
+  // readString(line);
+  // printString("\n\0");
+  // printString(line);
+	//-----------------------
+	//test of task 3
 	char buffer[512];
 	readSector(buffer, 30);
 	printString(buffer);
