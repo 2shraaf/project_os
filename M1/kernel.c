@@ -70,8 +70,10 @@ void readString(char* buffer){
 		buffer++;
 		i++;
 	}else{
-		buffer = i>0 ? buffer-- : buffer;
-		i = i>0 ? i-- : i;
+		if(i>0){
+			i--;
+			buffer--;
+		}
 		*buffer = '\0';
 	}
 		interrupt(0x10, 0xE*256 + (in), 0, 0, 0);
