@@ -5,7 +5,7 @@ void readString(char*);
 int DIV(int,int);
 int MOD(int,int);
 void readSector(char*,int);
-
+void handleInterrupt21 (int,int,int,int);
 
 void main()
 {
@@ -46,9 +46,15 @@ void main()
   // printString(line);
 	//-----------------------
 	//test of task 3
-	char buffer[512];
-	readSector(buffer, 30);
-	printString(buffer);
+	//char buffer[512];
+	//readSector(buffer, 30);
+	//printString(buffer);
+	//-----------------------
+	// test task 4,5
+	char* line[100];
+    makeInterrupt21(); 
+    interrupt(0x21,1,line,0,0);
+    interrupt(0x21,0,line,0,0);
 	while(1);
 }
 
@@ -100,4 +106,19 @@ void readSector(char* buffer, int sector){
 	int ch = DIV(sector,36);
 	interrupt(0x13,(2*256)+1,buffer,(ch*256)+cl,dh*256);
 
+}
+
+void handleInterrupt21 (int ax, int bx, int cx, int dx){
+	if(ax == 0){
+   printString(bx);
+	}
+	if(ax == 1){
+   readString(bx);
+	}
+	if(ax == 2){
+    readSector(bx,cx);
+	}
+	if(ax >= 3){
+    printString("ERROR !!!!! \n\0");  
+	}  
 }
