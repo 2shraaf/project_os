@@ -6,7 +6,9 @@ int DIV(int,int);
 int MOD(int,int);
 void readSector(char*,int);
 void handleInterrupt21 (int,int,int,int);
-
+//M3 T1
+void readFile(char*);
+int my_strcmp(char*, char*)
 void main()
 {
 
@@ -51,10 +53,16 @@ void main()
 	//printString(buffer);
 	//-----------------------
 	// test task 4,5
-	char* line[100];
-    makeInterrupt21(); 
-    interrupt(0x21,1,line,0,0);
-    interrupt(0x21,0,line,0,0);
+	// char* line[100];
+ 	// makeInterrupt21(); 
+ 	// interrupt(0x21,1,line,0,0);
+ 	// interrupt(0x21,0,line,0,0);
+ 	//-----------------------
+ 	//test M3 T1
+ 	char buffer[13312] /*this is the maximum size of a file*/
+	makeInterrupt21();
+	interrupt(0x21, 3, "messag\0", buffer, 0); /*read the file into buffer*/
+	interrupt(0x21, 0, buffer, 0, 0); /*print out the file*/
 	while(1);
 }
 
@@ -118,7 +126,43 @@ void handleInterrupt21 (int ax, int bx, int cx, int dx){
 	if(ax == 2){
     readSector(bx,cx);
 	}
-	if(ax >= 3){
+	if(ax == 3){
+    readFile();  
+	} 
+	if(ax > 3){
     printString("ERROR !!!!! \n\0");  
 	}  
+
+	/**
+	*	Reads a file into a certain buffer, it will alert the user if the
+	*	file is not found.
+	*/
+	void readFile(char* file_name, char* buff){
+		char dir[512];
+		readSector(dir, 2);
+		for(int i = 0; i<16; i++){
+			if(my_strcmp(dir, file_name)){
+				dir += 6;			
+				for (int i = 0; i < 26 && *dir != '\0'; i++){
+					readSector(buff, *dir);
+					dir  += 1;
+					buff += 512;
+				}
+				return;
+			}
+			dir += 32;
+		}
+		printString("The file \0");
+		printString(file_name);
+		printString("does not exist\n\0");
+	}
+	
+	// It only checks if the first 6 bytes of a are equal to b unlike the
+	// std strcmp.
+	int my_strcmp(char* a, char* b){
+		for(int i = 0; i<6; i++)
+			if(*a != *b)
+				return 0;
+		return 1;
+	}
 }
