@@ -1,14 +1,16 @@
 
-
 void printString(char*);
 void readString(char*);
-int DIV(int,int);
-int MOD(int,int);
 void readSector(char*,int);
+void readFile(char*, char* );
+void writeSector(char*,int);
+void writeFile(char*,char*, int );
 void handleInterrupt21 (int,int,int,int);
 //M3 T1
-void readFile(char*);
-int my_strcmp(char*, char*)
+int my_strcmp(char*, char*);
+int DIV(int,int);
+int MOD(int,int);
+
 void main()
 {
 
@@ -41,7 +43,7 @@ void main()
 	// while(1);
 	//--------------------
 	//test of task 1& 2
-	// 	char line[80];
+	// 	char line[80];x
   // printString("Hello, world!!!!\n\0");
   // readString(line);
   // printString("\n\0");
@@ -54,16 +56,27 @@ void main()
 	//-----------------------
 	// test task 4,5
 	// char* line[100];
- 	// makeInterrupt21(); 
+ 	// makeInterrupt21();
  	// interrupt(0x21,1,line,0,0);
  	// interrupt(0x21,0,line,0,0);
  	//-----------------------
  	//test M3 T1
- 	char buffer[13312] /*this is the maximum size of a file*/
+ 	char buffer[13312]; /*this is the maximum size of a file*/
 	makeInterrupt21();
 	interrupt(0x21, 3, "messag\0", buffer, 0); /*read the file into buffer*/
 	interrupt(0x21, 0, buffer, 0, 0); /*print out the file*/
-	while(1);
+// int i=0;
+// char buffer1[13312];
+// char buffer2[13312];
+// buffer2[0]='h'; buffer2[1]='e'; buffer2[2]='l';
+// buffer2[4]='o';
+// for(i=5; i<13312; i++) buffer2[i]=0x0;
+// makeInterrupt21();
+// interrupt(0x21,8, "testW\0", buffer2, 1); //write file testW
+// interrupt(0x21,3, "testW\0", buffer1, 0); //read file testW
+// interrupt(0x21,0, buffer1, 0, 0); // print out contents of testW
+ while(1);
+
 }
 
 
@@ -73,8 +86,6 @@ void printString(char* in){
 		in++;
 	}
 }
-
-
 void readString(char* buffer){
 	char in = interrupt(0x16, 0, 0, 0, 0);
 	int i = 0;
@@ -115,6 +126,85 @@ void readSector(char* buffer, int sector){
 	interrupt(0x13,(2*256)+1,buffer,(ch*256)+cl,dh*256);
 
 }
+/**
+*	Write a buffer in a certain sector
+*buffer size 512
+* Ah = 3
+*/
+
+void writeSector(char* buffer, int sector){
+	int cl = MOD(sector,18)+1;
+	int dh =  MOD(DIV(sector,18),2);
+	int ch = DIV(sector,36);
+	interrupt(0x13,(3*256)+1,buffer,(ch*256)+cl,dh*256);
+}
+
+/**
+*	Write a file in a certain sectors
+*
+*/
+
+void writeFile(char* name, char* buffer, int secNum){
+    int indx = -1;
+    int i = 0;
+    int bff =0;
+    int j = 0;
+    int sec = -1;
+    int diskMap[512];
+    int directoryMap[512];
+    int giveToSector[512];
+    if(secNum>26)secNum =26;
+    handleInterrupt21(2,diskMap,1,0);
+    handleInterrupt21(2,directoryMap,2,0);
+
+    // pass by 16 line of 32 bytes
+    for( i = 0 ;i<512;i+=32){
+      if(directoryMap[i]==0x00){
+        indx = i;
+        break;
+      }
+    }
+    if(indx==-1){
+        printString("No Free space for Directory \n\0");
+        return;
+    }
+    for( i = 0;i<6;i++,indx++){
+      if(name[i] != '\0'){ //If name lenth < 6
+        directoryMap[indx]=0x00;
+    }else{
+        directoryMap[indx]=name[i];
+      }
+    }
+    for( j = 0 ;j<secNum;j++,indx++){
+       sec = -1;
+      for( i = 3;i<512;i++){
+        if(diskMap[i]==0x00){ //search for free sector
+          sec=i;
+          diskMap[i]=0xFF; //use it
+          break;
+        }
+      }
+      if(sec==-1){
+          printString("No Free space for sector \n\0");
+          return;
+      }
+      directoryMap[indx]=sec;
+      for( i=0;i<512;i++){
+        if(buffer[bff] != '\0'){
+          giveToSector[i]=0x00;
+        }else{
+          giveToSector[i]=buffer[bff];
+          bff++;
+        }
+      }
+      writeSector(giveToSector,sec);
+    }
+    for(i = secNum;i< 26;i++,indx++){
+      directoryMap[indx] = 0x00;
+    }
+    handleInterrupt21(6,diskMap,1,0);
+    handleInterrupt21(6,directoryMap,2,0);
+}
 
 void handleInterrupt21 (int ax, int bx, int cx, int dx){
 	if(ax == 0){
@@ -127,42 +217,48 @@ void handleInterrupt21 (int ax, int bx, int cx, int dx){
     readSector(bx,cx);
 	}
 	if(ax == 3){
-    readFile();  
-	} 
-	if(ax > 3){
-    printString("ERROR !!!!! \n\0");  
-	}  
-
+    readFile();
+	}
+  if(ax== 6){
+    writeSector(bx,cx);
+  }
+  if(ax ==8){
+    writeFile(bx,cx,dx);
+  }
+	// if(ax > 3){
+  //   printString("ERROR !!!!! \n\0");
+	// }
+}
 	/**
 	*	Reads a file into a certain buffer, it will alert the user if the
 	*	file is not found.
 	*/
-	void readFile(char* file_name, char* buff){
+void readFile(char* file_name, char* buff){
 		char dir[512];
+    int i = 0;
 		readSector(dir, 2);
-		for(int i = 0; i<16; i++){
+		for( i = 0; i<16; i++){
 			if(my_strcmp(dir, file_name)){
-				dir += 6;			
-				for (int i = 0; i < 26 && *dir != '\0'; i++){
+				*dir += 6;
+				for ( i = 0; i < 26 && *dir != '\0'; i++){
 					readSector(buff, *dir);
-					dir  += 1;
+					*dir  += 1;
 					buff += 512;
 				}
 				return;
 			}
-			dir += 32;
+			*dir += 32;
 		}
 		printString("The file \0");
 		printString(file_name);
 		printString("does not exist\n\0");
 	}
-	
 	// It only checks if the first 6 bytes of a are equal to b unlike the
 	// std strcmp.
 	int my_strcmp(char* a, char* b){
-		for(int i = 0; i<6; i++)
+    int i =0;
+		for( i = 0; i<6; i++)
 			if(*a != *b)
 				return 0;
 		return 1;
 	}
-}
