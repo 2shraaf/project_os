@@ -234,20 +234,20 @@ void handleInterrupt21 (int ax, int bx, int cx, int dx){
 	*	file is not found.
 	*/
 void readFile(char* file_name, char* buff){
-		char dir[512];
-    int i = 0;
+		char* dir;
+    	int i = 0, j;
 		readSector(dir, 2);
 		for( i = 0; i<16; i++){
 			if(my_strcmp(dir, file_name)){
-				*dir += 6;
-				for ( i = 0; i < 26 && *dir != '\0'; i++){
+				dir += 6;
+				for ( j = 0; j < 26 && *dir != 0x0; j++){
 					readSector(buff, *dir);
-					*dir  += 1;
+					dir  = dir + 1;
 					buff += 512;
 				}
 				return;
 			}
-			*dir += 32;
+			dir += 32;
 		}
 		printString("The file \0");
 		printString(file_name);
@@ -256,9 +256,14 @@ void readFile(char* file_name, char* buff){
 	// It only checks if the first 6 bytes of a are equal to b unlike the
 	// std strcmp.
 	int my_strcmp(char* a, char* b){
-    int i =0;
-		for( i = 0; i<6; i++)
-			if(*a != *b)
+		int i;
+		for(i = 0; i<6; i++){
+			if(*a != *b){
+				a-=i; b-=i;
 				return 0;
+			}
+			a++; b++;
+		}
+		a-=5; b-=5;
 		return 1;
 	}
