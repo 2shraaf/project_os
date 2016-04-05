@@ -12,6 +12,7 @@ void prtInt(int );
 int my_strcmp(char*, char*);
 int DIV(int,int);
 int MOD(int,int);
+void deleteFile(char*);
 
 void main()
 {
@@ -84,6 +85,13 @@ void main()
   // interrupt(0x21,3, "testW\0", buffer1, 0); //read file testW
   // interrupt(0x21,0, buffer1, 0, 0); // print out contents of testW
   // printChar(buffer1[4]);
+
+  /*** Testing deleteFile ****/
+//   char buffer[13312];
+// makeInterrupt21();
+// interrupt(0x21, 7, "messag\0", 0, 0); //delete messag
+// interrupt(0x21, 3, "messag\0", buffer, 0); // try to read messag
+// interrupt(0x21, 0, buffer, 0, 0); //print out the contents of buffer
  while(1);
 
 }
@@ -230,15 +238,15 @@ void handleInterrupt21 (int ax, int bx, int cx, int dx){
 	if(ax == 3){
     readFile(bx,cx);
 	}
-  if(ax== 6){
+    if(ax== 6){
     writeSector(bx,cx);
-  }
-  if(ax ==8){
+    }
+    if(ax == 7){
+    writeSector(bx);
+    }
+    if(ax ==8){
     writeFile(bx,cx,dx);
-  }
-	// if(ax > 3){
-  //   printString("ERROR !!!!! \n\0");
-	// }
+    }
 }
 	/**
 	*	Reads a file into a certain buffer, it will alert the user if the
@@ -252,6 +260,8 @@ void readFile(char* file_name, char* buff){
 		for( i = 0; i<16; i++){
       for(f = 0 ; f<6 ;f++)
         cm[f] = dir[k+f];
+    	cm[6] = "\n";
+    	cm[7] = "\0";
 			if(my_strcmp(cm, file_name)==1){
 				k += 6;
 				for ( j = 0; j < 26 &&  dir[k]!= 0x0; j++){
@@ -279,6 +289,38 @@ void readFile(char* file_name, char* buff){
 		}
 		return 1;
 	}
+
+void deleteFile(char* name){
+	int i, j, k, f;
+	char dir[512];
+	char map[512];
+	char cm[8];
+	readSector(dir, 2);
+	readSector(map, 1);
+
+	for(i = 0; i<16; i++){
+		for(f = 0 ; f<6 ;f++)
+        	cm[f] = dir[k+f];
+    	cm[6] = "\n";
+    	cm[7] = "\0";
+    	if(my_strcmp(cm, name)==1){
+    		dir[k] = 0x0;
+    		k+=6;
+    		for ( j = 0; j < 26 &&  dir[k]!= 0x0; j++){
+    			map[((int)dir[k]) + 1] = 0x00;
+    			k = k + 1;
+    		}
+    		writeSector(map,1);
+    		writeSector(dir,2);
+    	}
+    	k+=32;
+	}
+
+	printString("The file \0");
+    printString(name);
+	printString("does not exist\n\0");
+
+}
   /**
    * For test
    *
