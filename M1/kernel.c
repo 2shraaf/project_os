@@ -61,54 +61,29 @@ void main()
  	// makeInterrupt21();
  	// interrupt(0x21,1,line,0,0);
  	// interrupt(0x21,0,line,0,0);
- 	//-----------------------
- 	//test M3 T1
- // 	char buffer[13312]; /*this is the maximum size of a file*/
-  // char bff[7];
-  //
+ 	//----------------------------------------------------------------
+ 	/**
+ 	 * test loadfile
+ 	 */
+  // char buffer[13312]; /*this is the maximum size of a file*/
 	// makeInterrupt21();
-  // bff[0]='m' ;
-  // bff[1]= 'e';
-  // bff[2]= 's';
-  // bff[3]= 's';
-  // bff[4]= 'a';
-  // bff[5]= 'g';
-  // bff[6]= '\0';
-
-
 	// interrupt(0x21, 3, "messag\0", buffer, 0); /*read the file into buffer*/
 	// interrupt(0x21, 0, buffer, 0, 0); /*print out the file*/
- //  char a[6] ,b[6];
- //  char ch[3];
- //  a[0]='a';
- //  b[0]='b';
- //  a[1]=b[1]='a';
- //  a[2]=b[2]='a';
- //  a[3]=b[3]='a';
- //  a[4]=b[4]='a';
- //  a[5]=b[5]='a';
- //
- //
- //  ch[0] = '0'+my_strcmp(a,b);
- //  ch[1]='\n';
- //  ch[2]='\0';
- // printString("Hello, world!!!!\n\0");
- // printString(ch);
-
-
-
-
-
-int i=0;
-char buffer1[13312];
-char buffer2[13312];
-buffer2[0]='h'; buffer2[1]='e'; buffer2[2]='l';
-buffer2[4]='o';
-for(i=5; i<13312; i++) buffer2[i]=0x0;
-makeInterrupt21();
-interrupt(0x21,8, "testW\0", buffer2, 1); //write file testW
-interrupt(0x21,3, "testW\0", buffer1, 0); //read file testW
-interrupt(0x21,0, buffer1, 0, 0); // print out contents of testW
+	// ---------------------------------------------------------------
+  /**
+   * test writeFile
+   */
+  // int i=0;
+  // char buffer1[13312];
+  // char buffer2[13312];
+  // buffer2[0]='h'; buffer2[1]='e'; buffer2[2]='l';
+  // buffer2[4]='o'; //will not prented cuz buffer2[3] =0x00
+  // for(i=5; i<13312; i++) buffer2[i]=0x0;
+  // makeInterrupt21();
+  // interrupt(0x21,8, "testW\0", buffer2, 1); //write file testW
+  // interrupt(0x21,3, "testW\0", buffer1, 0); //read file testW
+  // interrupt(0x21,0, buffer1, 0, 0); // print out contents of testW
+  // printChar(buffer1[4]);
  while(1);
 
 }
@@ -120,6 +95,7 @@ void printString(char* in){
 		in++;
 	}
 }
+
 void readString(char* buffer){
 	char in = interrupt(0x16, 0, 0, 0, 0);
 	int i = 0;
@@ -141,16 +117,20 @@ void readString(char* buffer){
 	buffer++; *buffer = 0xa;
 	buffer++; *buffer = 0x0;
 }
-int DIV(int a, int b){
-	int x=0;
-	if(!b) return 0; //it will make error
-	for(;a>=b;x++){ a-=b;}
-	return x;
+int MOD(int a, int b){
+    while(a >= b){
+        a = a - b;
+    }
+    return a;
 }
-int MOD(int a , int b){
-	if(!b) return 0; //it will make error
-	for(;a>=b;){ a-=b;}
-	return a;
+
+int DIV(int a, int b){
+    int q = 0;
+    while(q*b <=a){
+        q = q+1;
+    }
+    return q-1;
+
 }
 
 void readSector(char* buffer, int sector){
@@ -184,35 +164,35 @@ void writeFile(char* name, char* buffer, int secNum){
     int bff =0;
     int j = 0;
     int sec = -1;
-    int diskMap[512];
-    int directoryMap[512];
-    int giveToSector[512];
+    char diskMap[512];
+    char directoryMap[512];
+    char giveToSector[512];
     if(secNum>26)secNum =26;
-    handleInterrupt21(2,diskMap,1,0);
-    handleInterrupt21(2,directoryMap,2,0);
+    readSector(directoryMap,2);
+    readSector(diskMap,1);
 
     // pass by 16 line of 32 bytes
-    for( i = 0 ;i<512;i+=32){
-      if(directoryMap[i]==0x00){
+    for( i = 0 ;i<512;i+=0x20 ){
+      if(directoryMap[i]=='\0'){
         indx = i;
         break;
       }
     }
     if(indx==-1){
-        printString("No Free space for Directory \n\0");
+      printString("No Free space for Directory \n\0");
         return;
     }
     for( i = 0;i<6;i++,indx++){
-      if(name[i] != '\0'){ //If name lenth < 6
+      if(name[i] == '\0'){ //If name lenth < 6
         directoryMap[indx]=0x00;
     }else{
         directoryMap[indx]=name[i];
       }
     }
     for( j = 0 ;j<secNum;j++,indx++){
-       sec = -1;
+      sec = -1;
       for( i = 3;i<512;i++){
-        if(diskMap[i]==0x00){ //search for free sector
+        if(diskMap[i]!=0x00){ //search for free sector
           sec=i;
           diskMap[i]=0xFF; //use it
           break;
@@ -222,22 +202,19 @@ void writeFile(char* name, char* buffer, int secNum){
           printString("No Free space for sector \n\0");
           return;
       }
-      directoryMap[indx]=sec;
+      directoryMap[indx]= sec;
+
       for( i=0;i<512;i++){
-        if(buffer[bff] != '\0'){
-          giveToSector[i]=0x00;
-        }else{
           giveToSector[i]=buffer[bff];
           bff++;
-        }
       }
       writeSector(giveToSector,sec);
     }
     for(i = secNum;i< 26;i++,indx++){
       directoryMap[indx] = 0x00;
     }
-    handleInterrupt21(6,diskMap,1,0);
-    handleInterrupt21(6,directoryMap,2,0);
+    writeSector(diskMap,1);
+    writeSector(directoryMap,2);
 }
 
 void handleInterrupt21 (int ax, int bx, int cx, int dx){
@@ -272,9 +249,6 @@ void readFile(char* file_name, char* buff){
     char cm [8];
     int i = 0, j , k = 0 , f = 0 ,z;
 		readSector(dir, 2);
-
-
-
 		for( i = 0; i<16; i++){
       for(f = 0 ; f<6 ;f++)
         cm[f] = dir[k+f];
@@ -305,6 +279,10 @@ void readFile(char* file_name, char* buff){
 		}
 		return 1;
 	}
+  /**
+   * For test
+   *
+   */
   void printChar(char ch){
   	char* chars[2];
   	chars[0] = ch;
