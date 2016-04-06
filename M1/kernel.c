@@ -312,6 +312,7 @@ void deleteFile(char* name){
     		}
     		writeSector(map,1);
     		writeSector(dir,2);
+    		return;
     	}
     	k+=32;
 	}
