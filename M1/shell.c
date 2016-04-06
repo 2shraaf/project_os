@@ -44,10 +44,16 @@ void execute(char* cmd, char* buffer){
 	char arg1[6];
 	char arg2[6];
 	int proc = parse(cmd);
+	interrupt(0x21, 0, "\n", 0, 0);
 	if(proc == 1){
 		copy(cmd, arg1, 5);
 		interrupt(0x21, 3, arg1, buffer, 0);
 		interrupt(0x21, 0, buffer, 0, 0);
+	}else if(proc == 3){
+		copy(cmd, arg1, 5);
+		interrupt(0x21, 7, arg1, 0, 0);
+	}else{
+		interrupt(0x21, 0, "Invalid command\n\0", 0, 0);
 	}
 }
 
