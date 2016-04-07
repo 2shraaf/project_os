@@ -48,7 +48,7 @@ void main()
 	// while(1);
 	//--------------------
 	//test of task 1& 2
-	// 	char line[80];x
+	// 	char line[80];
   // printString("Hello, world!!!!\n\0");
   // readString(line);
   // printString("\n\0");
@@ -103,7 +103,7 @@ void main()
 
    /* you should load the shell program here using loadProgram or
    whatever its name was*/
-   // interrupt(0x21, 0, "hello\0", 0, 0);
+   makeInterrupt21();
  while(1);
 
 }
