@@ -6,13 +6,15 @@ void readFile(char*, char* );
 void writeSector(char*,int);
 void writeFile(char*,char*, int );
 void handleInterrupt21 (int,int,int,int);
+void executeProgram(char*, int);
+void terminateProgram();
+void deleteFile(char*);
 void printChar(char );
 void prtInt(int );
-//M3 T1
+
 int my_strcmp(char*, char*);
 int DIV(int,int);
 int MOD(int,int);
-void deleteFile(char*);
 
 void main()
 {
@@ -66,11 +68,11 @@ void main()
  	/**
  	 * test loadfile
  	 */
-    char buffer[13312]; /*this is the maximum size of a file*/
- 	 char buffer1[13312];
-	makeInterrupt21();
-	interrupt(0x21, 3, "messag\0", buffer, 0); /*read the file into buffer*/
-	interrupt(0x21, 0, buffer, 0, 0); /*print out the file*/
+  //   char buffer[13312]; /*this is the maximum size of a file*/
+ // 	 char buffer1[13312];
+	// makeInterrupt21();
+	// interrupt(0x21, 3, "messag\0", buffer, 0); /*read the file into buffer*/
+	// interrupt(0x21, 0, buffer, 0, 0); /*print out the file*/
 	// ---------------------------------------------------------------
   /**
    * test writeFile
@@ -87,14 +89,19 @@ void main()
   // interrupt(0x21,0, buffer1, 0, 0); // print out contents of testW
   // printChar(buffer1[4]);
 
+/* Test for terminateProgram */
+  // char buffer[13312]; /*this is the maximum size of a file*/
+  // char buffer1[13312];
+  // makeInterrupt21();
+  // interrupt(0x21, 4,"tstpr2\0", 0x2000, 0);
   /*** Testing deleteFile ****/
-  
-makeInterrupt21();
-interrupt(0x21, 7, "messag\0", 0, 0); //delete messag
-interrupt(0x21, 3, "messag\0", buffer1, 0); // try to read messag
-interrupt(0x21, 0, buffer1, 0, 0); //print out the contents of buffer
 
-   /* you should load the shell program here using loadProgram or 
+// makeInterrupt21();
+// interrupt(0x21, 7, "messag\0", 0, 0); //delete messag
+// interrupt(0x21, 3, "messag\0", buffer1, 0); // try to read messag
+// interrupt(0x21, 0, buffer1, 0, 0); //print out the contents of buffer
+
+   /* you should load the shell program here using loadProgram or
    whatever its name was*/
    // interrupt(0x21, 0, "hello\0", 0, 0);
  while(1);
@@ -231,7 +238,7 @@ void writeFile(char* name, char* buffer, int secNum){
 }
 
 void handleInterrupt21 (int ax, int bx, int cx, int dx){
-	if(ax == 0){
+  if(ax == 0){
    printString(bx);
 	}
 	if(ax == 1){
@@ -243,16 +250,22 @@ void handleInterrupt21 (int ax, int bx, int cx, int dx){
 	if(ax == 3){
     readFile(bx,cx);
 	}
-    if(ax== 6){
-    writeSector(bx,cx);
+  if(ax == 4){
+    executeProgram(bx,cx);
+  }
+  if(ax == 5){
+    terminateProgram();
+  }
+  if(ax== 6){
+  writeSector(bx,cx);
+  }
+  if(ax == 7){
+  deleteFile(bx);
+  }
+  if(ax ==8){
+  writeFile(bx,cx,dx);
     }
-    if(ax == 7){
-    deleteFile(bx);
-    }
-    if(ax ==8){
-    writeFile(bx,cx,dx);
-    }
-}
+  }
 	/**
 	*	Reads a file into a certain buffer, it will alert the user if the
 	*	file is not found.
@@ -313,6 +326,7 @@ void deleteFile(char* name){
     		k+=6;
     		for ( j = 0; j < 26 &&  dir[k]!= 0x0; j++){
     			map[((int)dir[k]) + 1] = 0x00;
+          dir[k] = 0x0;
     			k = k + 1;
     		}
     		writeSector(map,1);
@@ -323,9 +337,23 @@ void deleteFile(char* name){
 	}
 
 	printString("The file \0");
-    printString(name);
+  printString(name);
 	printString("does not exist\n\0");
 
+}
+
+void executeProgram(char* name, int segment){
+  int i;
+  char buff[512];
+  readFile(name, buff);
+    for(i = 0; i<512; i++){
+       putInMemory(segment, 0x0000 + i, buff[i]);
+    }
+  launchProgram(segment);
+}
+//Task 3 M3.
+void terminateProgram(){
+  while(1);
 }
   /**
    * For test
