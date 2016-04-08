@@ -105,7 +105,6 @@ void main()
    whatever its name was*/
  makeInterrupt21();
  interrupt(0x21, 4, "shell\0", 0x2000, 0);
- while(1);
 
 }
 
@@ -185,6 +184,7 @@ void writeFile(char* name, char* buffer, int secNum){
     int bff =0;
     int j = 0;
     int sec = -1;
+    int out = 3;
     char diskMap[512];
     char directoryMap[512];
     char giveToSector[512];
@@ -205,15 +205,17 @@ void writeFile(char* name, char* buffer, int secNum){
     }
     for( i = 0;i<6;i++,indx++){
       if(name[i] == '\0'){ //If name lenth < 6
-        directoryMap[indx]=0x00;
+        for(;i<6;i++,indx++)
+          directoryMap[indx]=0x00;
+        break;
     }else{
         directoryMap[indx]=name[i];
       }
     }
     for( j = 0 ;j<secNum;j++,indx++){
       sec = -1;
-      for( i = 3;i<512;i++){
-        if(diskMap[i]!=0x00){ //search for free sector
+      for( i = out;i<512;i++){
+        if(diskMap[i]==0x00){ //search for free sector
           sec=i;
           diskMap[i]=0xFF; //use it
           break;
@@ -224,7 +226,7 @@ void writeFile(char* name, char* buffer, int secNum){
           return;
       }
       directoryMap[indx]= sec;
-
+      out = sec+1;
       for( i=0;i<512;i++){
           giveToSector[i]=buffer[bff];
           bff++;
@@ -258,13 +260,13 @@ void handleInterrupt21 (int ax, int bx, int cx, int dx){
     terminateProgram();
   }
   if(ax== 6){
-  writeSector(bx,cx);
+    writeSector(bx,cx);
   }
   if(ax == 7){
-  deleteFile(bx);
+    deleteFile(bx);
   }
   if(ax ==8){
-  writeFile(bx,cx,dx);
+    writeFile(bx,cx,dx);
     }
   }
 	/**
@@ -292,9 +294,9 @@ void readFile(char* file_name, char* buff){
 			}
 			k += 32;
 		}
-		printString("The file \0");
-    printString(file_name);
-		printString("does not exist\n\0");
+		// printString("The file \0");
+  //   printString(file_name);
+		// printString("does not exist\n\0");
 	}
 	// It only checks if the first 6 bytes of a are equal to b unlike the
 	// std strcmp.
@@ -337,17 +339,17 @@ void deleteFile(char* name){
     	k+=32;
 	}
 
-	printString("The file \0");
-  printString(name);
-	printString("does not exist\n\0");
+	// printString("The file \0");
+ //  printString(name);
+	// printString("does not exist\n\0");
 
 }
 
 void executeProgram(char* name, int segment){
   int i;
-  char buff[512];
+  char buff[13312];
   readFile(name, buff);
-    for(i = 0; i<512; i++){
+    for(i = 0; i<13312; i++){
        putInMemory(segment, 0x0000 + i, buff[i]);
     }
   launchProgram(segment);
