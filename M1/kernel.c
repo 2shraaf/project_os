@@ -10,7 +10,7 @@ void executeProgram(char*, int);
 void terminateProgram();
 void deleteFile(char*);
 void printChar(char );
-void prtInt(int);
+void prtInt(int );
 
 int my_strcmp(char*, char*);
 int DIV(int,int);
@@ -90,10 +90,10 @@ void main()
   // printChar(buffer1[4]);
 
 /* Test for terminateProgram */
-  // char buffer[13312]; /*this is the maximum size of a file*/
-  // char buffer1[13312];
-  // makeInterrupt21();
-  // interrupt(0x21, 4,"tstpr2\0", 0x2000, 0);
+  char buffer[13312]; /*this is the maximum size of a file*/
+  char buffer1[13312];
+  makeInterrupt21();
+  interrupt(0x21, 4,"tstpr2\0", 0x2000, 0);
   /*** Testing deleteFile ****/
 
 // makeInterrupt21();
@@ -103,8 +103,7 @@ void main()
 
    /* you should load the shell program here using loadProgram or
    whatever its name was*/
- makeInterrupt21();
- interrupt(0x21, 4, "shell\0", 0x2000, 0);
+   makeInterrupt21();
  while(1);
 
 }
@@ -240,10 +239,10 @@ void writeFile(char* name, char* buffer, int secNum){
 
 void handleInterrupt21 (int ax, int bx, int cx, int dx){
   if(ax == 0){
-   printString(bx);
+    printString(bx);
 	}
 	if(ax == 1){
-   readString(bx);
+    readString(bx);
 	}
 	if(ax == 2){
     readSector(bx,cx);
@@ -258,13 +257,13 @@ void handleInterrupt21 (int ax, int bx, int cx, int dx){
     terminateProgram();
   }
   if(ax== 6){
-  writeSector(bx,cx);
+    writeSector(bx,cx);
   }
   if(ax == 7){
-  deleteFile(bx);
+    deleteFile(bx);
   }
   if(ax ==8){
-  writeFile(bx,cx,dx);
+    writeFile(bx,cx,dx);
     }
   }
 	/**
