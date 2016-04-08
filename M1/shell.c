@@ -12,7 +12,7 @@ void main(){
 
 	// Also, to parse any command, you don't need to read more than the
 	// first two characters to know which command is it.
-	
+
 	char cmd[19]; //bottleneck is at copy: 4+1+6+1+6+\0
 	char buffer[13312];
 	interrupt(0x21, 0, "$ \0", 0, 0);
@@ -59,6 +59,7 @@ void execute(char* cmd, char* buffer){
 
 
 void copy(char* cmd, char* arg, int j){
-	for(int i = j; i<6; i++)
+	int i;
+	for( i = j; i<6; i++)
 		arg[i] = cmd[i];
 }

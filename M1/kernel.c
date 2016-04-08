@@ -10,7 +10,7 @@ void executeProgram(char*, int);
 void terminateProgram();
 void deleteFile(char*);
 void printChar(char );
-void prtInt(int );
+void prtInt(int);
 
 int my_strcmp(char*, char*);
 int DIV(int,int);
@@ -103,7 +103,8 @@ void main()
 
    /* you should load the shell program here using loadProgram or
    whatever its name was*/
-   makeInterrupt21();
+ makeInterrupt21();
+ interrupt(0x21, 4, "shell\0", 0x2000, 0);
  while(1);
 
 }
