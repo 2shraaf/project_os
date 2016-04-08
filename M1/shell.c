@@ -12,7 +12,7 @@ void main(){
 
 	// Also, to parse any command, you don't need to read more than the
 	// first two characters to know which command is it.
-
+	
 	char cmd[19]; //bottleneck is at copy: 4+1+6+1+6+\0
 	char buffer[13312];
 	interrupt(0x21, 0, "$ \0", 0, 0);
@@ -49,9 +49,24 @@ void execute(char* cmd, char* buffer){
 		copy(cmd, arg1, 5);
 		interrupt(0x21, 3, arg1, buffer, 0);
 		interrupt(0x21, 0, buffer, 0, 0);
+	}else if(proc == 2){
+		copy(cmd, arg1, 5);
+		interrupt(0x21, 4, arg1, buffer,0);
 	}else if(proc == 3){
 		copy(cmd, arg1, 5);
 		interrupt(0x21, 7, arg1, 0, 0);
+	}else if(proc == 4){
+		copy(cmd, arg1, 5);
+		copy(cmd, arg2, 7);
+		interrupt(0x21, 3, arg1, buffer, 0);
+		interrupt(0x21, 8, arg2, buffer, 1);
+		interrupt(0x21, 0, buffer, 0, 0);
+	}else if(proc == 5){
+		copy(cmd, arg1, 5);
+		//shell command dir ?.
+	}else if(proc == 6){
+		copy(cmd, arg1, 5);
+		interrupt(0x21, 8, arg2, buffer, 1);
 	}else{
 		interrupt(0x21, 0, "Invalid command\n\0", 0, 0);
 	}
@@ -60,6 +75,6 @@ void execute(char* cmd, char* buffer){
 
 void copy(char* cmd, char* arg, int j){
 	int i;
-	for( i = j; i<6; i++)
+	for(i = j; i<6; i++)
 		arg[i] = cmd[i];
 }
