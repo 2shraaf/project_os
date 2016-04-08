@@ -76,12 +76,15 @@ void getword(char* cmd,char* word){
 
 
 }
+
+
 void execute(char* cmd,char* buffer){
-	int k;
+	int k. j = 0, cnt = 0;
 	char arg1[6];
 	char arg2[6];
 	char word[6];
 	char dir[512];
+	char tmp[13312];
 	int proc;
 	getword(cmd,word);
 	proc = check(word);
@@ -103,16 +106,34 @@ void execute(char* cmd,char* buffer){
 		interrupt(0x21, 3, arg1, buffer, 0);
 		interrupt(0x21, 8, arg2, buffer, 1);
 	}else if(proc == 5){
-		for(k=)
-
+		interrupt(0x21,2, buffer,2,0);
+		for(k=0 ; k<512;k+=32){
+			if(buffer[k]!= 0x00){
+				for(j=0 ; j< 32 ;j++){
+					if(j>=6 && buffer[k+j]==0x00)
+						break;
+					if(j>=6)
+					 cnt++;
+					if(j<6)arg1[j]=buffer[k+j];
+				}
+				interrupt(0x21, 0,arg1 , 0, 0);
+				interrupt(0x21, 0,"  \0" , 0, 0);
+				interrupt(0x21, 0,"\n\0" , 0, 0);
+			}
+		}
 	}else if(proc == 6){
 		getword(cmd,arg1); //fetching the name
+		j = 0;
+		interrupt(0x21, 0, "-> \0", 0, 0);
 		while(1){
 			interrupt(0x21, 0, "-> \0", 0, 0);
-			interrupt(0x21, 1, buffer, 0, 0); // taking the line
-			if(my_strcmp(buffer, "\n\0"))
+			interrupt(0x21, 1, tmp, 0, 0); // taking the line
+			if(my_strcmp(tmp, "\n\0")){
+				interrupt(0x21, 8, arg1, buffer, 26); // writing the line
 				return; //the user finished writing
-			interrupt(0x21, 8, arg1, buffer, 26); // writing the line
+			}
+			// copies the tmp into the buffer and moves the pointer on the buffer
+			j = copy(tmp, buffer, j); 
 		}
 	}else{
 		interrupt(0x21, 0, "Invalid command\n", 0, 0);
@@ -126,3 +147,12 @@ int my_strcmp(char* a, char* b){
 	return 1;
 }
 
+int copy(char* tmp, char* buff, int j){
+	int i = 0;
+	for(i = j; i<13311; i++){
+		buff[i] = tmp[i];
+		if(tmp[i] == 0x00)
+			break;
+	}
+	return i;
+}
