@@ -106,8 +106,14 @@ void execute(char* cmd,char* buffer){
 		for(k=)
 
 	}else if(proc == 6){
-		getword(cmd,arg1);
-		interrupt(0x21, 8, arg2, buffer, 1);
+		getword(cmd,arg1); //fetching the name
+		while(1){
+			interrupt(0x21, 0, "-> \0", 0, 0);
+			interrupt(0x21, 1, buffer, 0, 0); // taking the line
+			if(my_strcmp(buffer, "\n\0"))
+				return; //the user finished writing
+			interrupt(0x21, 8, arg1, buffer, 26); // writing the line
+		}
 	}else{
 		interrupt(0x21, 0, "Invalid command\n", 0, 0);
 	}
